@@ -118,7 +118,7 @@ def gate_anchor(fit_methods: tuple[str, ...], all_methods: tuple[str, ...],
     if coverage < MIN_COVERAGE:
         return Gate("anchor", False,
                     f"{', '.join(fit_methods)} is structurally fit but reaches only "
-                    f"{coverage:.0%} of revenue, against a {MIN_COVERAGE:.0%} bar. A "
+                    f"{coverage:.0%} of revenue, against an {MIN_COVERAGE:.0%} bar. A "
                     f"rating is a claim about the whole company; anchoring one on this "
                     f"would price {1 - coverage:.0%} of the business by assumption and "
                     f"report the result as though it had been valued")
