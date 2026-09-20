@@ -31,6 +31,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from equityresearch.catalysts import (  # noqa: E402
+    jnj_register, render as render_catalysts,
+)
 from equityresearch.claims import (  # noqa: E402
     Claim, Register, Tier, gate_thesis, render as render_claims,
 )
@@ -128,11 +131,45 @@ def build_register(diluted: float, implied_multiple: float, flip_multiple: float
         "the leave-one-out shows the result rests entirely on Eli Lilly. The narrower "
         "claim registered as 'lly' IS supported; this one is not"))
     r.add(Claim(
-        "scenarios", "Bull, Base and Bear driver paths for the forecast horizon",
+        "pfa", "J&J leads the electrophysiology market it created but holds a small "
+               "share of pulsed field ablation, the technology displacing it: Boston "
+               "Scientific ~41% and Medtronic ~48% of PFA spend in early 2026",
+        Tier.INFERRED,
+        "Third-party PFA spend-share estimates, not filed data. J&J's ~$5bn EP franchise "
+        "and its sector-leading mapping position are company statements. The inference "
+        "is that share loss in PFA threatens the segment this report's only fit "
+        "valuation leg rests on"))
+    r.add(Claim(
+        "darzalex_two_constraints",
+        "Darzalex faces two separate 2029 constraints -- an unresolved IRA eligibility "
+        "question and a reported US patent expiry -- so a favourable IRA outcome does "
+        "not clear the risk",
+        Tier.INFERRED,
+        "IRA treatment documented and unresolved; patent expiry reported in trade "
+        "coverage rather than read from a filing. The inference weakens this report's "
+        "own Bull case"))
+    r.add(Claim(
+        "scenarios",
+        "Bull, Base and Bear five-year consolidated revenue CAGRs of 4.91% / 4.58% / "
+        "0.80%, from time-varying driver schedules stated per segment",
         Tier.ASSUMED,
-        "Seven magnitudes still unsourced -- LOE calendar, MedTech growth, talc "
-        "settlement schedule, R&D step-up. scenarios_jnj.py refuses to run until they "
-        "are cited"))
+        "The FACTS are sourced -- Stelara's 2025 erosion, the 2026 IRA effective dates, "
+        "the Darzalex eligibility dispute, the talc 8-K. The MAPPING from those facts to "
+        "a growth rate in a given year is the analyst's, which is why this is Assumed "
+        "rather than Demonstrated. Talc cash and acquisition spend sit outside every "
+        "scenario and are disclosed on each run",
+        "python scripts/run_scenarios.py --live"))
+    r.add(Claim(
+        "thin_upside",
+        "J&J's organic upside is 33bp of revenue and 19 cents of FY2030 EPS above its "
+        "trailing trend once acquisitions the model cannot fund are removed",
+        Tier.INFERRED,
+        "FY2025 MedTech grew 5.4% reported, 1.1pp of it from Shockwave. Trellis grows "
+        "revenue at the driver rate without charging for the deal while sweeping cash "
+        "into buybacks, so the reported rate books acquired growth and returns the cash "
+        "that bought it. Setting MedTech to organic removes the double-count. The Base "
+        "case still carries it, so Base is an upper bound",
+        "python scripts/run_scenarios.py --live"))
     return r
 
 
@@ -165,6 +202,9 @@ def main() -> int:
     print(render_claims(register))
 
     print("\n\n" + render_implied(implied))
+
+    from datetime import date
+    print("\n\n" + render_catalysts(jnj_register(), date.today()))
 
     print("\n\nPEER DISPERSION")
     print("=" * 15 + "\n")
@@ -201,8 +241,11 @@ def main() -> int:
 
     print(f"\n  Thesis rests at the level of its weakest link: "
           f"{register.weakest(thesis_chain).value.upper()}.")
-    print("  Scenario sections are absent: seven magnitudes remain unsourced. "
-          "Run\n  `python run_scenarios.py --checklist` for the list.")
+    print("  Scenarios: Bull +4.91% / Base +4.58% / Bear +0.80% five-year consolidated\n"
+          "  revenue CAGR; FY2030 EPS $12.27 / $12.08 / $9.89 on a modelled declining\n"
+          "  share count. Full paths, provenance and the flex-effect table:\n"
+          "  `python run_scenarios.py --live`. Talc cash and acquisition spend are\n"
+          "  OUTSIDE every scenario -- see the register above and REPORT.md section 8.")
     return 0
 
 

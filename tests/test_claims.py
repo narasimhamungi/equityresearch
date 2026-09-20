@@ -101,3 +101,30 @@ def test_render_omits_the_unsupported_note_when_there_are_none():
 def test_missing_claim_id_is_refused():
     with pytest.raises(ClaimError, match="No claim 'nope'"):
         Register().get("nope")
+
+
+def test_no_claim_in_the_jnj_register_describes_work_as_outstanding():
+    """Stale-label guard, added after the claim register shipped twice describing the
+    scenario magnitudes as unsourced when they were sourced and running.
+
+    This project's recurring failure is prose drifting from behaviour. The catalyst
+    register checks its own dates; nothing was checking the claim register, so a claim
+    asserting incomplete work survived two runs and a reviewer would have read it as
+    current. Crude by design -- it catches the phrasing, not the meaning -- but the four
+    stale labels before it were all this phrasing."""
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from run_report import build_register
+
+    register = build_register(2_429_400_000.0, 9.0, 4.48, 0.84)
+    # Phrases, not words. A first version used the bare word "outstanding" and fired on
+    # "shares outstanding" -- the same false-positive failure as an earlier guard in this
+    # project, where a check that flags correct content teaches a reader to ignore it.
+    forbidden = ("still unsourced", "remain unsourced", "refuses to run",
+                 "not yet sourced", "to be sourced", "magnitudes outstanding",
+                 "work outstanding", "TODO", "placeholder")
+    for claim in register.claims:
+        blob = f"{claim.text} {claim.source}".lower()
+        hit = [f for f in forbidden if f.lower() in blob]
+        assert not hit, f"{claim.id} still claims work is outstanding: {hit}"

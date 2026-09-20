@@ -40,6 +40,12 @@ what can be established when the usual machinery has already disqualified itself
 110+ tests. Every module was mutation-tested — deliberately broken to confirm the tests
 catch it. Two mutations survived on the first pass and are documented where they sit.
 
+## The report
+
+**[REPORT.md](REPORT.md)** is the initiation report itself — industry and competitive
+position, forecast, valuation, catalysts, risks, thesis and recommendation. The findings
+below are its headline results.
+
 ## Findings
 
 **1. The market implicitly prices Innovative Medicine near 9.0x revenue.** MedTech is the
