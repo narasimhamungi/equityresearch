@@ -197,12 +197,18 @@ BULL_IM = SegmentPath(
 )
 BULL_MT = SegmentPath(
     name="MedTech", base_revenue=MT_FY2025, source=MT_SOURCE,
-    growth=(0.055, 0.060, 0.060, 0.055, 0.055),
+    growth=(0.045, 0.050, 0.050, 0.048, 0.045),
     rationale=(
-        "Sustains FY2025's reported 5.4% rather than fading to organic, on continued "
-        "electrophysiology and Abiomed momentum. " + F_MEDTECH + ". Consistent with "
-        "DealLab's own Abiomed case rather than a fresh set of synergy assumptions -- "
-        "different numbers here would put the portfolio in contradiction with itself"),
+        "ORGANIC rates, not FY2025's reported 5.4%, and the difference is deliberate. "
+        "1.1pp of that reported figure came from Shockwave (" + F_MEDTECH + "), and "
+        "Trellis grows revenue at the driver rate WITHOUT charging for the acquisition "
+        "that produced it, while simultaneously sweeping every spare dollar into "
+        "buybacks. Running MedTech at the reported rate would therefore book "
+        "acquisition-driven growth AND return the cash that bought it -- the same "
+        "dollar counted twice. The path here sits just above FY2025's ~4.3% organic, "
+        "which is what the model can actually fund. If MedTech deserves the reported "
+        "rate, the acquisition spend has to come out of the buyback sweep, and Trellis "
+        "has no line for that. MAGNITUDES ARE THE ANALYST'S"),
 )
 
 BULL_EXTRA: dict[int, tuple[Flex, ...]] = {}
@@ -212,7 +218,9 @@ BULL = Scenario(
     thesis=("The Darzalex orphan exemption holds and Faspro retains protection to 2034, "
             "removing the largest forward risk from the horizon. The launch portfolio -- "
             "Darzalex, Tremfya, Erleada, Carvykti, Rybrevant -- carries Innovative "
-            "Medicine through the 2026 items, and MedTech sustains its reported rate. "
+            "Medicine through the 2026 items. MedTech grows at ORGANIC rates, not its "
+            "reported 5.4%, because this model cannot pay for the acquisitions that "
+            "produced the difference -- see INHERITED_CONSTRAINTS. "
             "Stated as an operating case; the segment re-rating argument is made "
             "separately in the valuation section."),
     years=to_scenario_years((BULL_IM, BULL_MT), HORIZON, extra=BULL_EXTRA),
@@ -242,6 +250,15 @@ INHERITED_CONSTRAINTS = (
     "condition is not met, sit OUTSIDE every scenario above. Deduct it from equity value "
     "by hand, or state it as an unpriced risk. Do not read these cases as having "
     "absorbed it.",
+
+    "ACQUISITION GROWTH IS NOT PAID FOR. Trellis grows revenue at the driver rate and "
+    "charges nothing for the deals that produced the historical rate, while "
+    "sweep_to_buybacks returns every spare dollar to shareholders -- so modelled "
+    "buybacks run ~2.3x J&J's actual $5.95bn FY2025 repurchases. The Bull MedTech path "
+    "is set to organic rates rather than reported for exactly this reason. The Base "
+    "case, being Trellis unmodified, still carries the double-count: its 4.58% CAGR is "
+    "derived from history that includes acquired growth. Read Base as the upper end of "
+    "what organic performance alone supports.",
 
     "The Darzalex branch is not a magnitude the analyst chose; it is an unresolved policy "
     "question, and Bear and Bull take opposite sides of it deliberately. That is why "

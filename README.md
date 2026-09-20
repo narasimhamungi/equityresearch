@@ -5,9 +5,12 @@ Initiation-of-coverage analysis on Johnson & Johnson, built on
 forecasting) and [ValuationLab](https://github.com/narasimhamungi/valuationlab) (DCF,
 comps, precedents, sum-of-the-parts).
 
-**Status: analysis complete, report incomplete.** Seven scenario magnitudes are still
-unsourced and the scenario engine refuses to run without them. The findings below do not
-depend on them.
+**Status: analysis complete, prose sections unwritten.** Scenario magnitudes are sourced
+to J&J's FY2025 results, the 2026 IRA effective dates, and the 27 July 2026 talc 8-K.
+Three things sit deliberately outside the numbers and are disclosed on every run: the
+$5.5bn talc cash (Trellis has no one-off-outflow driver), acquisition spend (the sweep
+policy has no M&A line, so modelled buybacks run ~2.3x actual), and equity-compensation
+issuance. Industry and competitive positioning are not written.
 
 ---
 
