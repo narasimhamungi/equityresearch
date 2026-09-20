@@ -65,6 +65,17 @@ UNSOURCED = "UNSOURCED"
 KINDS = ("derived", "sourced", "judgment")
 MODES = ("set", "delta")
 
+#: What a flex is SUPPOSED to do to the business. Optional, and checked only when set.
+#:
+#: The first version of this check had no such declaration and simply flagged any flex
+#: that raised earnings while cutting net debt. On J&J's Bull case that fired on four of
+#: five flexes -- all of them ordinary upside growth, which of course raises earnings and
+#: builds cash. An 80% false-positive rate teaches a reader to scroll past the warning,
+#: which is precisely how the defect it was built to catch got through in the first
+#: place. So the direction is declared rather than guessed, and silence means no claim
+#: was made rather than no problem exists.
+EXPECTATIONS = ("", "cost", "benefit")
+
 #: Only numeric drivers are flexable. The policy strings (`dividend_policy`,
 #: `capital_return_policy`) select a MECHANISM, not a magnitude -- switching them
 #: between scenarios would mean the three cases are running different models, so the
@@ -88,6 +99,7 @@ class Flex:
     value: float
     kind: str      # "derived" | "sourced" | "judgment"
     basis: str     # why this magnitude, and where it came from. Required.
+    expect: str = ""   # "cost" | "benefit" | "" (no claim) -- see EXPECTATIONS
 
     def apply(self, base_value: float) -> float:
         return self.value if self.mode == "set" else base_value + self.value
@@ -162,6 +174,9 @@ def validate(scenario: Scenario, horizon: int) -> None:
             if f.kind not in KINDS:
                 raise ScenarioError(f"{scenario.name} y{y.offset}: kind {f.kind!r} "
                                     f"not in {KINDS}.")
+            if f.expect not in EXPECTATIONS:
+                raise ScenarioError(f"{scenario.name} y{y.offset}: expect {f.expect!r} "
+                                    f"not in {EXPECTATIONS}.")
             if not f.basis.strip():
                 raise ScenarioError(
                     f"{scenario.name} y{y.offset}: '{f.driver}' has no basis. Every "
@@ -316,3 +331,122 @@ def research_items(scenario: Scenario) -> tuple[ResearchItem, ...]:
         ResearchItem(driver=d, years=tuple(sorted(set(yrs))), text=t)
         for (d, t), yrs in found.items()
     )
+
+
+@dataclass(frozen=True)
+class FlexEffect:
+    """What one flex actually does to the numbers that decide value."""
+    offset: int
+    driver: str
+    kind: str
+    basis: str
+    expect: str
+    net_income_delta: float     # summed across the horizon
+    net_debt_delta: float       # at the final forecast year
+
+    @property
+    def helps(self) -> bool:
+        return self.net_income_delta > 0 and self.net_debt_delta < 0
+
+    @property
+    def hurts(self) -> bool:
+        return self.net_income_delta < 0 or self.net_debt_delta > 0
+
+    @property
+    def negligible(self) -> bool:
+        return self.net_income_delta == 0 and self.net_debt_delta == 0
+
+    @property
+    def contradicts_expectation(self) -> bool:
+        """Only meaningful where a direction was declared. A flex expected to cost the
+        business that instead improves earnings AND net debt is a driver being used for
+        something it does not mean -- which is exactly what happened when J&J's talc
+        settlement was routed through `debt_repayment`."""
+        if self.negligible and self.expect:
+            return True
+        if self.expect == "cost":
+            return self.helps
+        if self.expect == "benefit":
+            return self.hurts
+        return False
+
+
+def flex_effects(table: dict[int, dict[str, float]], base_year: int,
+                 base_drivers: Drivers, scenario: Scenario,
+                 horizon: int = 5) -> tuple[FlexEffect, ...]:
+    """Per-flex effect on net income and net debt, measured by removal.
+
+    WHY THIS EXISTS
+    ----------------
+    A scenario file once carried J&J's $5.5bn talc settlement as a `debt_repayment`
+    flex: tagged `sourced`, citing the 8-K by date, printed in the provenance table.
+    Measured, it RAISED net income and REDUCED net debt. A $3bn cost that improved both
+    earnings and the balance sheet.
+
+    Trellis plugs cash, so `debt_repayment` retires debt and draws the cash balance down
+    with it, leaving net debt flat and cutting interest expense. That is correct for an
+    actual debt repayment and exactly wrong for a settlement, where cash leaves to a
+    third party, debt does not move, and net debt rises. No driver in the current set
+    does the latter.
+
+    Nothing caught it. The scenario ran, the provenance cited a real filing, and the
+    error ran in the flattering direction. It surfaced only because a $3bn payment
+    moving EPS by two cents looked implausible on inspection.
+
+    The first attempt at a guard tested whether a flex changed the forecast at all.
+    That would have passed this one -- it changed plenty of line items. What matters is
+    DIRECTION against the fields that decide value, which is what this measures. The
+    check is not automatic judgement: it reports the signed effect of each flex so a
+    reader can see that a cost improved earnings. That alone would have caught it in
+    seconds.
+    """
+    def decisive(f: dict[int, dict[str, float]]) -> tuple[float, float]:
+        ni = sum(v.get("net_income", 0.0) for v in f.values())
+        last = max(f)
+        nd = f[last].get("long_term_debt", 0.0) - f[last].get("cash_and_equivalents", 0.0)
+        return ni, nd
+
+    base_ni, base_nd = decisive(
+        run_scenario(table, base_year, base_drivers, scenario, horizon).forecast)
+    out: list[FlexEffect] = []
+
+    for year in scenario.years:
+        for f in year.flexes:
+            trimmed = ScenarioYear(offset=year.offset, note=year.note,
+                                   flexes=tuple(x for x in year.flexes if x is not f))
+            without = Scenario(
+                name=scenario.name, thesis=scenario.thesis,
+                years=tuple(trimmed if y is year else y for y in scenario.years))
+            wo_ni, wo_nd = decisive(
+                run_scenario(table, base_year, base_drivers, without, horizon).forecast)
+            out.append(FlexEffect(
+                offset=year.offset, driver=f.driver, kind=f.kind, basis=f.basis,
+                expect=f.expect, net_income_delta=base_ni - wo_ni,
+                net_debt_delta=base_nd - wo_nd))
+    return tuple(out)
+
+
+def render_effects(effects: tuple[FlexEffect, ...], scenario_name: str) -> str:
+    """The block a reader scans for a flex pointing the wrong way."""
+    if not effects:
+        return f"  {scenario_name}: no flexes."
+    lines = [f"  {scenario_name} -- what each flex actually moves",
+             f"    {'flex':<30}{'expect':>9}{'net income':>18}{'net debt':>16}"]
+    for e in effects:
+        flag = ""
+        if e.contradicts_expectation:
+            flag = (f"   <- CONTRADICTS: declared {e.expect}, "
+                    f"{'moves nothing' if e.negligible else 'does the opposite'}")
+        lines.append(f"    [y+{e.offset}] {e.driver:<22}{(e.expect or '-'):>9}"
+                     f"{e.net_income_delta:>+18,.0f}{e.net_debt_delta:>+16,.0f}{flag}")
+    if any(e.contradicts_expectation for e in effects):
+        lines.append("")
+        lines.append("    A flex is not doing what its basis claims. Most often the "
+                     "driver means something")
+        lines.append("    other than the analyst intended -- check it before using "
+                     "these numbers.")
+    undeclared = sum(1 for e in effects if not e.expect)
+    if undeclared:
+        lines.append(f"    ({undeclared} flex(es) declare no expected direction, so "
+                     f"nothing is checked for them.)")
+    return "\n".join(lines)

@@ -16,10 +16,21 @@ import sys
 sys.path.insert(0, __file__.rsplit("/", 2)[0] + "/src")
 
 from equityresearch.scenarios import (  # noqa: E402
-    UNSOURCED, ScenarioError, provenance_table, research_items, run_scenario,
-    tier_mix, validate,
+    UNSOURCED, ScenarioError, flex_effects, provenance_table, render_effects,
+    research_items, run_scenario, tier_mix, validate,
+)
+from equityresearch.share_path import (  # noqa: E402
+    acquisition_blind_warning, build_share_path, circularity_warning,
+    render as render_shares,
 )
 from equityresearch.shares import fetch_share_count  # noqa: E402
+
+#: Repurchase price for converting modelled buybacks into retired shares. Required, not
+#: defaulted -- see share_path.py. Set to the market price used elsewhere in this report,
+#: which is exactly the price the thesis disputes, so the circularity warning fires.
+REPURCHASE_PRICE = 267.20
+MARKET_PRICE = 267.20
+THESIS_SAYS_EXPENSIVE = True
 
 from scenarios_jnj import (  # noqa: E402
     ALL_SCENARIOS, BASE_FISCAL_YEAR, CONSOLIDATED_FY2025, HORIZON,
@@ -54,8 +65,11 @@ def checklist() -> int:
     print(f"\n{'=' * 78}\nINHERITED CONSTRAINTS\n{'=' * 78}")
     for c in INHERITED_CONSTRAINTS:
         print(f"  - {c}")
-    print(f"\n{outstanding} magnitude(s) outstanding. "
-          f"Scenarios will not run until these are sourced or the flex is deleted.")
+    if outstanding:
+        print(f"\n{outstanding} magnitude(s) outstanding. Scenarios will not run until "
+              f"these are sourced or the flex is deleted.")
+    else:
+        print("\nNothing outstanding. Scenarios will run.")
     return 1 if outstanding else 0
 
 
@@ -84,6 +98,8 @@ def live() -> int:
         run = run_scenario(table, base_year, base_drivers, scen, HORIZON)
         print(f"\n{'=' * 78}\n{provenance_table(scen)}\n")
         print(f"  tier mix: {tier_mix(scen)}")
+        print(render_effects(
+            flex_effects(table, base_year, base_drivers, scen, HORIZON), scen.name))
         if run.reconciliation_failures:
             print("  ARITHMETIC FAILURE -- do not use these numbers:")
             for f in run.reconciliation_failures:
@@ -92,12 +108,20 @@ def live() -> int:
             print(f"  FINDING: path cannot fund itself in {run.insolvent_years} "
                   f"(cash below floor with the revolver exhausted). This is an "
                   f"economic result, not a bug -- state it in the report.")
+        path = build_share_path(run.forecast, denom, REPURCHASE_PRICE)
+        print(render_shares(path, scen.name))
+        for warn in (acquisition_blind_warning(
+                         path, table[base_year].get("buybacks", 0.0)),
+                     circularity_warning(path, MARKET_PRICE, THESIS_SAYS_EXPENSIVE)):
+            if warn:
+                print(warn)
         for year in sorted(run.forecast):
             y = run.forecast[year]
             print(f"    FY{year}  rev {y['revenue'] / 1e9:8.1f}B  "
                   f"EBIT {y['operating_income'] / 1e9:7.1f}B  "
                   f"NI {y['net_income'] / 1e9:7.1f}B  "
-                  f"EPS {y['net_income'] / denom:6.2f}")
+                  f"EPS {y['net_income'] / path.shares_for(year):6.2f}  "
+                  f"(fixed-count {y['net_income'] / denom:6.2f})")
     return 0
 
 

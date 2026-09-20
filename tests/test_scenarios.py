@@ -272,3 +272,75 @@ def test_research_items_is_empty_for_a_fully_sourced_scenario():
     from equityresearch.scenarios import research_items
     scen = Scenario("Bear", "t", (ScenarioYear(1, (_flex(basis="10-K note 21"),)),))
     assert research_items(scen) == ()
+
+
+# --- a flex must move the numbers in the direction its basis claims ------------
+
+def test_the_talc_flex_improves_earnings_and_net_debt():
+    """The defect, measured. A $3bn settlement modelled through debt_repayment RAISES
+    net income (interest saved on retired debt) and REDUCES net debt. A cost that
+    improves both sides of the business is a driver being used for something it does
+    not mean -- and it ran in the flattering direction, which is why it survived."""
+    from equityresearch.scenarios import flex_effects
+    scen = Scenario("Bear", "t", (ScenarioYear(1, (
+        Flex("debt_repayment", "set", 3_000e6, "sourced", "talc payment per 8-K",
+             expect="cost"),)),))
+    e = flex_effects(TABLE, 2025, BASE_DRIVERS, scen, 3)[0]
+    assert e.net_income_delta > 0, "the cost improved earnings"
+    assert e.net_debt_delta < 0, "the cost reduced net debt"
+    assert e.contradicts_expectation
+
+
+def test_a_genuine_downside_flex_reduces_earnings():
+    from equityresearch.scenarios import flex_effects
+    scen = Scenario("Bear", "t", (ScenarioYear(1, (_flex(value=-0.03),)),))
+    e = flex_effects(TABLE, 2025, BASE_DRIVERS, scen, 3)[0]
+    assert e.net_income_delta < 0 and not e.contradicts_expectation
+
+
+def test_effects_isolate_one_flex_at_a_time():
+    from equityresearch.scenarios import flex_effects
+    scen = Scenario("Bear", "t", (ScenarioYear(1, (
+        _flex(value=-0.03),
+        Flex("debt_repayment", "set", 3_000e6, "sourced", "talc", expect="cost"),)),))
+    by = {e.driver: e for e in flex_effects(TABLE, 2025, BASE_DRIVERS, scen, 3)}
+    assert by["revenue_growth"].net_income_delta < 0
+    assert by["debt_repayment"].contradicts_expectation
+
+
+def test_render_effects_flags_a_flex_that_improves_both():
+    from equityresearch.scenarios import flex_effects, render_effects
+    scen = Scenario("Bear", "t", (ScenarioYear(1, (
+        Flex("debt_repayment", "set", 3_000e6, "sourced", "talc", expect="cost"),)),))
+    text = render_effects(flex_effects(TABLE, 2025, BASE_DRIVERS, scen, 3), "Bear")
+    assert "CONTRADICTS" in text and "declared cost" in text
+    assert "no flexes" in render_effects((), "Base")
+
+
+def test_ordinary_upside_growth_is_not_flagged():
+    """The false positive that made the first version of this check useless: on J&J's
+    Bull case it fired on four of five flexes, all of them ordinary growth, which of
+    course raises earnings and builds cash. A warning that fires on correct behaviour
+    teaches a reader to scroll past it."""
+    from equityresearch.scenarios import flex_effects, render_effects
+    scen = Scenario("Bull", "t", (ScenarioYear(1, (_flex(value=+0.03),)),))
+    effects = flex_effects(TABLE, 2025, BASE_DRIVERS, scen, 3)
+    assert effects[0].helps
+    assert not effects[0].contradicts_expectation, "no direction declared, nothing checked"
+    assert "CONTRADICTS" not in render_effects(effects, "Bull")
+
+
+def test_a_benefit_flex_that_hurts_is_flagged():
+    from equityresearch.scenarios import flex_effects
+    scen = Scenario("Bull", "t", (ScenarioYear(1, (
+        _flex(value=-0.03, kind="judgment", basis="synergy"),)),))
+    scen = Scenario("Bull", "t", (ScenarioYear(1, (
+        Flex("revenue_growth", "delta", -0.03, "judgment", "synergy", expect="benefit"),)),))
+    assert flex_effects(TABLE, 2025, BASE_DRIVERS, scen, 3)[0].contradicts_expectation
+
+
+def test_an_invalid_expectation_is_rejected():
+    scen = Scenario("Bear", "t", (ScenarioYear(1, (
+        Flex("revenue_growth", "delta", -0.01, "judgment", "b", expect="maybe"),)),))
+    with pytest.raises(ScenarioError, match="expect 'maybe'"):
+        build_driver_path(BASE_DRIVERS, scen, 5)
