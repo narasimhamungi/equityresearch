@@ -5,12 +5,12 @@ Initiation-of-coverage analysis on Johnson & Johnson, built on
 forecasting) and [ValuationLab](https://github.com/narasimhamungi/valuationlab) (DCF,
 comps, precedents, sum-of-the-parts).
 
-**Status: analysis complete, prose sections unwritten.** Scenario magnitudes are sourced
-to J&J's FY2025 results, the 2026 IRA effective dates, and the 27 July 2026 talc 8-K.
-Three things sit deliberately outside the numbers and are disclosed on every run: the
-$5.5bn talc cash (Trellis has no one-off-outflow driver), acquisition spend (the sweep
-policy has no M&A line, so modelled buybacks run ~2.3x actual), and equity-compensation
-issuance. Industry and competitive positioning are not written.
+**Status: complete.** The initiation report is [REPORT.md](REPORT.md). Scenario
+magnitudes are sourced to J&J's FY2025 results, the 2026 IRA effective dates, and the
+27 July 2026 talc 8-K. Three things sit deliberately outside the numbers and are disclosed
+on every run: the $5.5bn talc cash (Trellis has no one-off-outflow driver), acquisition
+spend (the sweep policy has no M&A line, so modelled buybacks run ~2.3x actual), and
+equity-compensation issuance.
 
 ---
 
@@ -93,7 +93,7 @@ That is the result, not a gap. The thesis rests at the level of its weakest link
 ## Running it
 
 ```bash
-pip install -e .
+pip install -e ".[dev]"          # pulls Trellis at v0.2.0
 python -m pytest tests -q
 
 export TRELLIS_USER_AGENT="you@example.com"
@@ -107,10 +107,9 @@ python scripts/run_scenarios.py --checklist   # what is still unsourced
 
 ## What is not here
 
-Seven scenario magnitudes — the LOE calendar, MedTech's growth path, the talc settlement
-schedule, the R&D step-up. They need filing facts, and the scenario engine refuses to run
-on placeholders rather than producing a target price that looks finished. The industry
-and competitive positioning sections are qualitative and unwritten.
+The report's own list is [§8 of REPORT.md](REPORT.md#8-what-this-report-does-not-contain):
+talc cash, acquisition spend, equity-compensation issuance, a scenario-level DCF, and
+primary research. One code-level gap sits here rather than there:
 
 Peer multiples in `run_implied.py` are **copied** from ValuationLab's printed output
 rather than imported, because that repo exposes its sum-of-the-parts as stdout. They go

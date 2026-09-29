@@ -6,7 +6,15 @@ build-backend = "setuptools.build_meta"
 name = "equityresearch"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["requests>=2.31"]
+dependencies = [
+    "requests>=2.31",
+    "trellis @ git+https://github.com/narasimhamungi/trellis.git@v0.2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+# scripts/check_dispersion.py only; nothing under src/ or tests/ imports it
+live = ["valuationlab @ git+https://github.com/narasimhamungi/valuationlab.git@v0.2.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
