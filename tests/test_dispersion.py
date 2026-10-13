@@ -143,8 +143,8 @@ ADDED_LIVE = {"LLY": 16.082, "AMGN": 6.649}
 
 
 def test_the_real_six_peer_run_is_inconclusive_not_supported():
-    """The case that exposed the defect. CV rises 0.460 -> 0.641 while IQR/median FALLS
-    0.674 -> 0.629. Judging on CV alone reported PREMISE SUPPORTED; the measures
+    """The live six-peer case. CV rises 0.460 -> 0.641 while IQR/median FALLS
+    0.674 -> 0.629. Judging on CV alone would report PREMISE SUPPORTED; the measures
     disagree, which is what one extreme observation produces."""
     result = compare_peer_sets(
         PHARMA_4_LIVE, PHARMA_4_LIVE + list(ADDED_LIVE.values()), ("LLY", "AMGN"))
@@ -196,7 +196,7 @@ def test_leave_one_out_refuses_an_empty_candidate_set():
 
 
 def test_support_now_requires_both_measures_to_agree():
-    """Previously the CV alone carried the verdict."""
+    """The CV alone does not carry the verdict."""
     result = compare_peer_sets(PHARMA_4_LIVE, PHARMA_4_LIVE + [18.0, 0.55],
                                ("A", "B"))
     assert result.cv_widened and result.iqr_widened

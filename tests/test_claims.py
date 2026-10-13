@@ -107,20 +107,18 @@ def test_no_claim_in_the_jnj_register_describes_work_as_outstanding():
     """Stale-label guard, added after the claim register shipped twice describing the
     scenario magnitudes as unsourced when they were sourced and running.
 
-    This project's recurring failure is prose drifting from behaviour. The catalyst
-    register checks its own dates; nothing was checking the claim register, so a claim
-    asserting incomplete work survived two runs and a reviewer would have read it as
-    current. Crude by design -- it catches the phrasing, not the meaning -- but the four
-    stale labels before it were all this phrasing."""
+    The failure this guards against is prose drifting from behaviour. The catalyst
+    register checks its own dates; this checks the claim register, so a claim asserting
+    incomplete work cannot survive once the work is done. Crude by design -- it catches
+    the phrasing, not the meaning."""
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
     from run_report import build_register
 
     register = build_register(2_429_400_000.0, 9.0, 4.48, 0.84)
-    # Phrases, not words. A first version used the bare word "outstanding" and fired on
-    # "shares outstanding" -- the same false-positive failure as an earlier guard in this
-    # project, where a check that flags correct content teaches a reader to ignore it.
+    # Phrases, not words: the bare word "outstanding" would fire on "shares outstanding",
+    # and a check that flags correct content teaches a reader to ignore it.
     forbidden = ("still unsourced", "remain unsourced", "refuses to run",
                  "not yet sourced", "to be sourced", "magnitudes outstanding",
                  "work outstanding", "TODO", "placeholder")

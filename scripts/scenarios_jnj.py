@@ -1,20 +1,19 @@
 """
 J&J Bull / Base / Bear scenario definitions, with magnitudes sourced.
 
-WHAT CHANGED FROM THE FIRST DRAFT, AND WHY IT MATTERED
---------------------------------------------------------
-The first version of this file built the Bear case around "the Innovative Medicine
-patent cliff arrives faster and deeper than the base assumes." That framing was wrong,
-and the filings say so plainly: the cliff already arrived and the company absorbed it.
+WHY THE BEAR CASE IS NOT "THE PATENT CLIFF ARRIVES FASTER"
+----------------------------------------------------------
+A Bear case built around "the Innovative Medicine patent cliff arrives faster and deeper
+than the base assumes" misreads the filings: the cliff already arrived and the company
+absorbed it.
 Stelara lost US exclusivity in 2025, its sales fell 41.3% to $6.08bn, it took roughly
 10.4 percentage points off Innovative Medicine's worldwide operational sales growth --
 and the segment still grew 5.3% operationally to $60.4bn, its first year above $60bn,
 with thirteen brands growing double digits.
 
-Writing a downside case around an event that has already happened and been survived
-would have produced a Bear scenario barely distinguishable from the Base, and the error
-would have been invisible in the output: the numbers would have looked like a
-considered downside. The forward question is not Stelara. It is what comes next.
+A downside case written around an event that has already happened and been survived
+would be barely distinguishable from the Base, and the error would be invisible in the
+output: the numbers would look like a considered downside. The forward question is not Stelara. It is what comes next.
 
 WHAT COMES NEXT, AND THE ONE THING WORTH BUILDING A SCENARIO ON
 ----------------------------------------------------------------
@@ -94,22 +93,21 @@ F_TALC = ("J&J 8-K, 27 July 2026: $5.5bn comprehensive talc resolution covering 
 
 # THE TALC SETTLEMENT IS NOT MODELLED, AND COULD NOT BE
 # -------------------------------------------------------
-# Both scenarios originally carried the talc payment as a `debt_repayment` flex, tagged
-# `sourced`, citing J&J's 8-K, appearing in the provenance table. It did nothing.
+# Modelling the talc payment as a `debt_repayment` flex, tagged `sourced` and citing
+# J&J's 8-K, would put it in the provenance table while doing nothing.
 #
 # Trellis plugs cash: `long_term_debt = prior_debt - debt_repayment`, and the cash
 # balance absorbs the offsetting financing flow. Measured directly on a single projected
-# year, net debt came out at 7.0bn with no flex, 7.0bn with +3bn, and 7.0bn with -3bn.
+# year, net debt is 7.0bn with no flex, 7.0bn with +3bn, and 7.0bn with -3bn.
 # That is arithmetically CORRECT for an actual debt repayment -- paying debt with cash
 # leaves net debt unchanged -- and it is exactly wrong for a litigation settlement, where
 # cash leaves to a third party, debt does not move, and net debt should RISE by the
 # payment. Trellis has no driver that reduces cash without also reducing debt.
 #
-# The first attempt at this used a NEGATIVE value on the reasoning that cash out should
-# be negative, which modelled J&J borrowing $3bn instead. Flipping the sign corrected the
-# reasoning and changed nothing, because the mechanism was never capable of it.
+# A NEGATIVE value (cash out as negative) models J&J borrowing $3bn instead; flipping the
+# sign changes nothing, because the mechanism is not capable of it.
 #
-# So the flexes are removed. A flex that shows up in the provenance table with an 8-K
+# So there are no talc flexes. A flex that shows up in the provenance table with an 8-K
 # citation and moves no number is worse than an absent one: it manufactures the
 # appearance of having priced the settlement. The exposure is stated in
 # INHERITED_CONSTRAINTS instead, where a reader will see it is NOT in the numbers.

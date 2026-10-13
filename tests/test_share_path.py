@@ -14,8 +14,8 @@ def _fc(*buybacks, start=2026):
 
 
 def test_share_count_falls_as_buybacks_accumulate():
-    """The defect: the runner divided every year by a FIXED FY2025 count while the
-    model was sweeping cash into repurchases, understating EPS progressively."""
+    """Dividing every year by a FIXED FY2025 count while the model sweeps cash into
+    repurchases would understate EPS progressively."""
     path = build_share_path(_fc(5e9, 5e9, 5e9), OPENING, PRICE)
     ends = [p.shares_end for p in path.points]
     assert ends[0] > ends[1] > ends[2]

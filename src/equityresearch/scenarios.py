@@ -67,13 +67,11 @@ MODES = ("set", "delta")
 
 #: What a flex is SUPPOSED to do to the business. Optional, and checked only when set.
 #:
-#: The first version of this check had no such declaration and simply flagged any flex
-#: that raised earnings while cutting net debt. On J&J's Bull case that fired on four of
-#: five flexes -- all of them ordinary upside growth, which of course raises earnings and
-#: builds cash. An 80% false-positive rate teaches a reader to scroll past the warning,
-#: which is precisely how the defect it was built to catch got through in the first
-#: place. So the direction is declared rather than guessed, and silence means no claim
-#: was made rather than no problem exists.
+#: Without a declaration, a check that flags any flex raising earnings while cutting net
+#: debt fires on four of five flexes in J&J's Bull case -- all ordinary upside growth,
+#: which of course raises earnings and builds cash. An 80% false-positive rate teaches a
+#: reader to scroll past the warning. So the direction is declared rather than guessed,
+#: and silence means no claim was made rather than no problem exists.
 EXPECTATIONS = ("", "cost", "benefit")
 
 #: Only numeric drivers are flexable. The policy strings (`dividend_policy`,
@@ -389,16 +387,13 @@ def flex_effects(table: dict[int, dict[str, float]], base_year: int,
     third party, debt does not move, and net debt rises. No driver in the current set
     does the latter.
 
-    Nothing caught it. The scenario ran, the provenance cited a real filing, and the
-    error ran in the flattering direction. It surfaced only because a $3bn payment
-    moving EPS by two cents looked implausible on inspection.
+    Nothing else catches it: the scenario runs, the provenance cites a real filing, and
+    the error runs in the flattering direction (a $3bn payment moving EPS by two cents).
 
-    The first attempt at a guard tested whether a flex changed the forecast at all.
-    That would have passed this one -- it changed plenty of line items. What matters is
-    DIRECTION against the fields that decide value, which is what this measures. The
-    check is not automatic judgement: it reports the signed effect of each flex so a
-    reader can see that a cost improved earnings. That alone would have caught it in
-    seconds.
+    Testing whether a flex changes the forecast at all would pass it -- it changes
+    plenty of line items. What matters is DIRECTION against the fields that decide
+    value, which is what this measures. The check is not automatic judgement: it reports
+    the signed effect of each flex so a reader can see that a cost improved earnings.
     """
     def decisive(f: dict[int, dict[str, float]]) -> tuple[float, float]:
         ni = sum(v.get("net_income", 0.0) for v in f.values())

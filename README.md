@@ -1,5 +1,7 @@
 # EquityResearch
 
+[![CI](https://github.com/narasimhamungi/equityresearch/actions/workflows/ci.yml/badge.svg)](https://github.com/narasimhamungi/equityresearch/actions/workflows/ci.yml)
+
 Initiation-of-coverage analysis on Johnson & Johnson, built on
 [Trellis](https://github.com/narasimhamungi/trellis) (SEC XBRL ingestion and driver-based
 forecasting) and [ValuationLab](https://github.com/narasimhamungi/valuationlab) (DCF,
@@ -37,8 +39,8 @@ what can be established when the usual machinery has already disqualified itself
 | `claims.py` | Every material claim tiered Demonstrated / Inferred / Assumed / Unsupported with its source, and a gate that stops an unsupported claim entering the thesis. |
 | `recommendation.py` | Issues a rating only when stated gates pass; otherwise **NO CALL**, naming the gate. |
 
-110+ tests. Every module was mutation-tested — deliberately broken to confirm the tests
-catch it. Two mutations survived on the first pass and are documented where they sit.
+181 tests. Every module was mutation-tested — deliberately broken to confirm the tests
+catch it; the two surviving mutations are documented where they sit.
 
 ## The report
 
@@ -59,25 +61,25 @@ range. The conclusion is stated with that boundary, not without it.
 Amgen at 6.6x *tightens* the set. So the peer group is one company away from usable, and
 the honest claim names it rather than asserting sector-wide heterogeneity.
 
-**3. The evidence offered upstream for that heterogeneity cannot support it.**
-ValuationLab argues dispersion is structural because adding peers widened the min/max
-spread. That statistic is **monotonic in sample size** — it widens whatever you add,
-including draws from a single distribution. Simulated from one tight lognormal, mean
-spread runs 1.7x at four peers, 1.9x at six, 2.2x at ten. The claim is registered
-UNSUPPORTED and the thesis does not use it. A narrower version is supported and is used.
+**3. Adding peers cannot establish that heterogeneity.** Adding Lilly and Amgen widens
+the min/max spread from 2.5x to 4.7x, but that statistic is **monotonic in sample size**
+— it widens whatever you add, including draws from a single distribution. Simulated from
+one tight lognormal, mean spread runs 1.7x at four peers, 1.9x at six, 2.2x at ten. The
+sector-wide claim is registered UNSUPPORTED and the thesis does not use it; the narrower
+claim in finding 2 is supported and is used.
 
 **4. The 2.0x disqualification bar is not scale-free.** At four peers with the observed
 dispersion, pure sampling exceeds it 68% of the time. The fitness verdicts still stand —
 both legs use four peers, so the monotonicity cancels — but the threshold should not be
 quoted as a clean test.
 
-**5. Two silent data defects were found and fixed upstream.** J&J's fiscal years end on
-the Sunday nearest 31 December, so FY2020–FY2022 closed in early January; keying the
-table by calendar year filed each one year late and collided FY2022 with FY2023, dropping
-an entire fiscal year across every line item with nothing failing. Separately, SEC's
-`companyconcept` endpoint returns HTTP 200 with zero facts for tags that
-`companyfacts` populates, reducing one peer to a single usable field per year. Both fixed
-in Trellis with tests. J&J's derived revenue CAGR moved 3.34% → **4.58%**.
+**5. Two silent data hazards decide the revenue trend.** J&J's fiscal years end on the
+Sunday nearest 31 December, so FY2020–FY2022 closed in early January; keyed by calendar
+year, each lands a year late and FY2022 collides with FY2023, dropping an entire fiscal
+year across every line item with nothing failing. Separately, SEC's `companyconcept`
+endpoint returns HTTP 200 with zero facts for tags that `companyfacts` populates, which
+would reduce one peer to a single usable field per year. Trellis handles both, with
+tests; J&J's derived revenue CAGR is **4.58%** (3.34% with calendar-year keying).
 
 ## Recommendation
 

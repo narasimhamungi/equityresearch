@@ -280,7 +280,7 @@ def test_the_talc_flex_improves_earnings_and_net_debt():
     """The defect, measured. A $3bn settlement modelled through debt_repayment RAISES
     net income (interest saved on retired debt) and REDUCES net debt. A cost that
     improves both sides of the business is a driver being used for something it does
-    not mean -- and it ran in the flattering direction, which is why it survived."""
+    not mean -- and it runs in the flattering direction, which is why it is easy to miss."""
     from equityresearch.scenarios import flex_effects
     scen = Scenario("Bear", "t", (ScenarioYear(1, (
         Flex("debt_repayment", "set", 3_000e6, "sourced", "talc payment per 8-K",
@@ -318,9 +318,9 @@ def test_render_effects_flags_a_flex_that_improves_both():
 
 
 def test_ordinary_upside_growth_is_not_flagged():
-    """The false positive that made the first version of this check useless: on J&J's
-    Bull case it fired on four of five flexes, all of them ordinary growth, which of
-    course raises earnings and builds cash. A warning that fires on correct behaviour
+    """Without a declared direction, the check would fire on four of five flexes in
+    J&J's Bull case, all of them ordinary growth, which of course raises earnings and
+    builds cash. A warning that fires on correct behaviour
     teaches a reader to scroll past it."""
     from equityresearch.scenarios import flex_effects, render_effects
     scen = Scenario("Bull", "t", (ScenarioYear(1, (_flex(value=+0.03),)),))

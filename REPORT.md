@@ -117,11 +117,11 @@ Trellis derives J&J's drivers from FY2021–FY2025 with no sourced overrides and
 fallback assumptions — an unusually clean starting point. **Revenue CAGR 4.58%, gross
 margin 69.06%.**
 
-Both figures are corrected. The historical table originally read 3.34% because J&J's
-fiscal years end on the Sunday nearest 31 December: FY2020–FY2022 closed in early
-January, were filed a year late by calendar-year keying, and FY2023 collided with FY2022
-and was dropped across every line item. Nothing failed — the remaining years were
-internally consistent. Fixed upstream in Trellis (`1b61d95`).
+Both figures depend on keying J&J's years correctly. Its fiscal years end on the Sunday
+nearest 31 December, so FY2020–FY2022 closed in early January; calendar-year keying files
+each a year late and drops FY2023 (it collides with FY2022) across every line item, which
+reads as a 3.34% CAGR. Nothing fails — the remaining years are internally consistent.
+Trellis keys by fiscal year (`1b61d95`).
 
 ### 3.2 Scenarios
 
@@ -186,15 +186,15 @@ what comparable companies trade at. A location, not a valuation.
 
 ### 4.3 The peer set is one company away from usable
 
-ValuationLab's disqualification of the pharma peer set is correct but its stated *reason*
-was not supportable, and this report corrected it upstream rather than repeating it.
+ValuationLab's disqualification of the pharma peer set is correct; the reason is narrower
+than sector-wide heterogeneity.
 
-The original argument: dispersion is economic rather than small-sample noise, evidenced by
-the min/max spread widening from 2.5x to 4.7x when Lilly and Amgen were added. **A min/max
+Adding peers cannot show that dispersion is economic rather than small-sample noise: the
+min/max spread widens from 2.5x to 4.7x when Lilly and Amgen are added, but **a min/max
 spread is monotonic in sample size** — the minimum can only fall and the maximum can only
 rise — so it widens whatever you add. Simulated from a single tight lognormal with no
 change in the underlying distribution: mean spread 1.7x at four peers, 1.9x at six, 2.2x
-at ten. The observation was consistent with the claim and with its opposite.
+at ten. The observation is consistent with the claim and with its opposite.
 
 Re-measured on scale-free statistics, the result is inconclusive and rests on one company:
 

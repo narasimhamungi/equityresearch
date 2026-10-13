@@ -48,9 +48,9 @@ def test_market_implies_a_multiple_above_the_pharma_peer_median_at_every_mark():
 
 
 def test_the_finding_is_NOT_robust_across_the_fit_leg_range():
-    """The correction this module was built to catch.
+    """The boundary this module exists to measure.
 
-    Eyeballed, the claim was 'the market prices Innovative Medicine above every pharma
+    Eyeballed, the claim would be 'the market prices Innovative Medicine above every pharma
     peer.' It holds at MedTech's low and median marks (9.3x and 8.9x against a peer max
     of 8.6x) and fails at MedTech's high mark, where the implied multiple falls to 8.3x
     -- inside the peer range. A conclusion that depends on where the fit leg is marked
